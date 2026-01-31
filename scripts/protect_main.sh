@@ -42,6 +42,10 @@ if [[ -z "${owner}" || -z "${repo}" ]]; then
   exit 1
 fi
 
+# Detect default branch from GitHub; fallback to main if not found.
+default_branch=$(gh api "/repos/${owner}/${repo}" --jq .default_branch 2>/dev/null || true)
+branch="${default_branch:-main}"
+
 # TODO: Replace the placeholder with your actual CI check contexts.
 # Example: ["CI / ci (ubuntu-latest)", "CI / ci (macos-latest)", "CI / ci (windows-latest)"]
 read -r -d '' payload <<'JSON'
@@ -67,16 +71,16 @@ set +e
 response=$(gh api \
   --method PUT \
   -H "Accept: application/vnd.github+json" \
-  "/repos/${owner}/${repo}/branches/main/protection" \
+  "/repos/${owner}/${repo}/branches/${branch}/protection" \
   --input - <<<"${payload}" 2>&1)
 status=$?
 set -e
 
 if [[ ${status} -ne 0 ]]; then
-  echo "Failed to apply branch protection to ${owner}/${repo} (main)." >&2
+  echo "Failed to apply branch protection to ${owner}/${repo} (${branch})." >&2
   echo "Response:" >&2
   echo "${response}" >&2
   exit ${status}
 fi
 
-echo "Branch protection applied to ${owner}/${repo} (main)."
+echo "Branch protection applied to ${owner}/${repo} (${branch})."
