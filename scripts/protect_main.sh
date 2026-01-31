@@ -48,7 +48,7 @@ branch="${default_branch:-main}"
 
 # TODO: Replace the placeholder with your actual CI check contexts.
 # Example: ["CI / ci (ubuntu-latest)", "CI / ci (macos-latest)", "CI / ci (windows-latest)"]
-read -r -d '' payload <<'JSON'
+payload=$(cat <<'JSON'
 {
   "required_status_checks": {
     "strict": true,
@@ -66,6 +66,7 @@ read -r -d '' payload <<'JSON'
   "allow_deletions": false
 }
 JSON
+)
 
 set +e
 response=$(gh api \
