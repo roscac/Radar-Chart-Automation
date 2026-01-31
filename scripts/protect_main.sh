@@ -20,12 +20,18 @@ fi
 owner=""
 repo=""
 
-if [[ "${remote_url}" =~ ^git@github.com:([^/]+)/(.+?)(\.git)?$ ]]; then
-  owner="${BASH_REMATCH[1]}"
-  repo="${BASH_REMATCH[2]}"
-elif [[ "${remote_url}" =~ ^https?://github.com/([^/]+)/(.+?)(\.git)?$ ]]; then
-  owner="${BASH_REMATCH[1]}"
-  repo="${BASH_REMATCH[2]}"
+clean_url="${remote_url%.git}"
+clean_url="${clean_url%/}"
+
+if [[ "${clean_url}" == git@github.com:* ]]; then
+  path="${clean_url#git@github.com:}"
+  owner="${path%%/*}"
+  repo="${path#*/}"
+elif [[ "${clean_url}" == https://github.com/* ]] || [[ "${clean_url}" == http://github.com/* ]]; then
+  path="${clean_url#https://github.com/}"
+  path="${path#http://github.com/}"
+  owner="${path%%/*}"
+  repo="${path#*/}"
 else
   echo "Error: Unsupported remote URL format: ${remote_url}" >&2
   exit 1
