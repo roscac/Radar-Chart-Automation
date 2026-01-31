@@ -5,6 +5,8 @@ A cross-platform desktop app that turns Teamworks AMS CMJ exports into athlete r
 ## Download
 Download the latest macOS or Windows build from the GitHub Releases page.
 
+On first launch, macOS may block the app because it’s not notarized. Use Control-click → Open to run it.
+
 ## Screenshots
 ![GUI Screenshot](assets_public/GUI_screenshot.png)
 ![Sample Output](assets_public/sample_output.png)
