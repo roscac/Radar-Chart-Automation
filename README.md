@@ -1,55 +1,57 @@
 # Radar Chart Automation
 
-Cross-platform desktop app for generating athlete radar charts from Teamworks AMS CSV exports (force plate CMJ summary).
+A cross-platform desktop app that turns Teamworks AMS CMJ exports into athlete radar charts, percentile tables, and print-ready reports.
 
-## How to download
-Visit the GitHub Releases page and download the latest macOS or Windows zip file for your system.
+## Download
+Download the latest macOS or Windows build from the GitHub Releases page.
 
-## How to use
-1. Run the app.
-2. Click **Select CSV(s)** and choose one or more Teamworks exports (one test date per CSV).
-3. Enter a **Run title** (optional). Leave blank to use the first filename.
+## Screenshots
+![GUI Screenshot](docs/gui_screenshot.svg)
+![Sample Output](docs/sample_output.svg)
+
+To update these, capture a real screenshot of the app and a single PDF page, then overwrite:
+- `docs/gui_screenshot.svg` (or replace with .png)
+- `docs/sample_output.svg` (or replace with .png)
+
+## Quick start (end users)
+1. Open the app (.app on macOS or .exe on Windows).
+2. Click **Select CSV(s)** and choose one or more Teamworks exports (one date per CSV).
+3. (Optional) Enter a **Run title**.
 4. (Optional) check **Export PNGs**.
-5. Click **Run**. The status box shows progress and any errors.
-6. Click **Open output folder** after completion.
+5. Click **Run**.
+6. Click **Open output folder** and print the PDF.
 
-Outputs are stored in:
-`~/Documents/RadarChartAutomation/Runs/<run_folder_name>/`
+## Inputs
+- One CSV per test date (Teamworks AMS export).
+- Athlete name column is auto-detected; if missing, you will be prompted to map columns.
+- Required metrics (numeric columns):
+  - Jump Height (in) → Jump Height
+  - Peak Power/BM → Triple Ext
+  - RSI-Modified → Elasticity
+  - Eccentric Peak Power/BM → Loading
+  - Eccentric Deceleration RFD/BM → Braking
 
-## Inputs and outputs (summary)
-- Inputs: Teamworks AMS CSV exports (one test date per CSV).
-- Outputs: per-run folder with `01_raw_input/`, `02_percentiles/`, `03_outputs/`, and `logs/`.
+## Outputs
+- Output path: `~/Documents/RadarChartAutomation/Runs/<run_folder_name>/`
+- Each run creates:
+  - `01_raw_input/` (copied CSVs)
+  - `02_percentiles/` (long + wide percentile CSVs)
+  - `03_outputs/` (multi-page PDF + optional PNGs)
+  - `logs/` (run log)
+- Multi-page PDF is Letter (8.5x11) and print-ready.
 
-## Project structure
+## Troubleshooting
+- **Missing columns**: you’ll be prompted to map them.
+- **Non-numeric values**: the run will stop and report the offending column.
+- **Tkinter errors on macOS**: use a Tk-enabled Python build (pyenv with framework or python.org installer).
+
+## Privacy
+All processing is local. No uploads. Do not commit CSVs or output folders to git.
+
+## Maintainer
+### Local run
 ```
-radar_chart_automation/
-  app.py
-  src/
-    io.py
-    percentiles.py
-    radar_plot.py
-    run_manager.py
-    utils.py
-  assets/
-  tests/
-  requirements.txt
-  radar_chart_automation.spec
-```
-
-## Output folders
-Each run creates:
-- `01_raw_input/` (copies of selected CSVs)
-- `02_percentiles/` (long + wide percentile CSVs)
-- `03_outputs/` (PDF and optional PNGs)
-- `logs/` (run log)
-
-## Percentile logic
-- Percentiles are computed per test date, per metric, across all athletes in that CSV.
-- Excel-like percent rank: `rank(value, ascending=True, average ties) / N`.
-
-## Build and run
-### Local run (dev)
-```
+cd radar_chart_automation
 python -m venv .venv
 source .venv/bin/activate  # macOS/Linux
 .venv\Scripts\activate     # Windows
@@ -57,32 +59,22 @@ pip install -r requirements.txt
 python app.py
 ```
 
-## Build (macOS .app)
+### Build (macOS)
 ```
+cd radar_chart_automation
 pyinstaller --noconfirm radar_chart_automation.spec
 ```
 Output: `dist/RadarChartAutomation.app`
 
-## Build (Windows .exe)
+### Build (Windows)
 ```
+cd radar_chart_automation
 pyinstaller --noconfirm radar_chart_automation.spec
 ```
 Output: `dist/RadarChartAutomation/RadarChartAutomation.exe`
 
-## Maintainers: publish a release
+### Release (tag + publish builds)
 ```
-python scripts/release.py --patch
+python radar_chart_automation/scripts/release.py --patch
 ```
-Creates a version tag (e.g. `v0.2.0`), pushes it, and triggers GitHub Actions to build and attach macOS/Windows zips to the Release.
-
-Optional icon:
-- Add an `.ico` (Windows) or `.icns` (macOS) and update `radar_chart_automation.spec` with `icon=...` in `EXE()`.
-
-## Testing
-```
-pytest
-```
-
-## Notes
-- If the app cannot auto-detect the athlete name or metric columns, a mapping dialog will appear.
-- If a date is not found in the CSV or filename, the app will prompt for a date label.
+This bumps the version, tags `vX.Y.Z`, pushes the tag, and triggers GitHub Actions to attach macOS/Windows zips to the Release.

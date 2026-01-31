@@ -27,8 +27,8 @@ ENV/
 
 # Logs and outputs
 logs/
-Documents/
-Runs/
+**/Documents/
+**/Runs/
 
 # Pyenv
 **/.python-version
