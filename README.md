@@ -2,6 +2,9 @@
 
 Cross-platform desktop app for generating athlete radar charts from Teamworks AMS CSV exports (force plate CMJ summary).
 
+## How to download
+Visit the GitHub Releases page and download the latest macOS or Windows zip file for your system.
+
 ## How to use
 1. Run the app.
 2. Click **Select CSV(s)** and choose one or more Teamworks exports (one test date per CSV).
