@@ -62,6 +62,12 @@ pyinstaller --noconfirm radar_chart_automation.spec
 ```
 Output: `dist/RadarChartAutomation/RadarChartAutomation.exe`
 
+## Release (tag + build via GitHub Actions)
+```
+python scripts/release.py --patch
+```
+Creates a version tag (e.g. `v0.2.0`), pushes it, and triggers the release workflow.
+
 ### PyInstaller (Windows)
 ```
 pyinstaller radar_chart_automation.spec
