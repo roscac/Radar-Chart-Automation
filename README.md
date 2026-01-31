@@ -5,6 +5,11 @@ Cross-platform desktop app for generating athlete radar charts from Teamworks AM
 ## How to download
 Visit the GitHub Releases page and download the latest macOS or Windows zip file for your system.
 
+## Enable branch protection
+```
+./scripts/protect_main.sh
+```
+
 ## How to use
 1. Run the app.
 2. Click **Select CSV(s)** and choose one or more Teamworks exports (one test date per CSV).
