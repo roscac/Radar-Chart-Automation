@@ -1,40 +1,34 @@
+**/.DS_Store
+
 # Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-*.pyc
-.pytest_cache/
-.mypy_cache/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
 
 # Virtual environments
 .venv/
 venv/
 ENV/
 
-# macOS
-.DS_Store
-
-# Windows
-Thumbs.db
-Desktop.ini
+# Test/cache
+**/.pytest_cache/
+**/.mypy_cache/
 
 # PyInstaller
-build/
-dist/
-*.spec
+**/.pyinstaller_cache/
+**/build/
+**/dist/
+**/*.spec
 !radar_chart_automation/radar_chart_automation.spec
-.pyinstaller_cache/
 
-# Logs
+# Archives
+**/*.zip
+
+# Logs and outputs
 logs/
-
-# Output data
 Documents/
 Runs/
 
-# Artifacts
-RadarChartAutomation-mac.zip
-
 # Pyenv
-.python-version
+**/.python-version

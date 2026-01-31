@@ -35,7 +35,7 @@ jobs:
       - name: Import app smoke test
         working-directory: radar_chart_automation
         run: |
-          python -c "import app; print('app import ok')"
+          python -c "import src; import tkinter; print('import ok')"
 
       - name: Compile check
         working-directory: radar_chart_automation

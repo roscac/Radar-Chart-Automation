@@ -11,8 +11,9 @@ import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 
 from src import io, percentiles, radar_plot, run_manager, utils
+from src.version import __version__
 
-APP_VERSION = "1.0.0"
+APP_VERSION = __version__
 
 
 class RadarChartApp(tk.Tk):

@@ -54,7 +54,7 @@ jobs:
         working-directory: radar_chart_automation
         run: |
           if [ -d dist/RadarChartAutomation.app ]; then
-            ditto -c -k --sequesterRsrc --keepParent dist/RadarChartAutomation.app RadarChartAutomation-mac.zip
+            ditto -c -k --sequesterRsrc --keepParent dist/RadarChartAutomation.app RadarChartAutomation-macos.zip
           else
             echo "No macOS app bundle found" && exit 1
           fi
@@ -65,7 +65,7 @@ jobs:
           name: RadarChartAutomation-${{ runner.os }}
           path: |
             radar_chart_automation/RadarChartAutomation-windows.zip
-            radar_chart_automation/RadarChartAutomation-mac.zip
+            radar_chart_automation/RadarChartAutomation-macos.zip
 
   release:
     runs-on: ubuntu-latest
@@ -79,9 +79,15 @@ jobs:
         with:
           path: artifacts
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            artifacts/**/RadarChartAutomation-windows.zip
-            artifacts/**/RadarChartAutomation-mac.zip
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag exists. Uploading assets..."
+          else
+            gh release create "$tag" --title "$tag" --notes "Automated release for $tag"
+          fi
+          gh release upload "$tag" artifacts/**/RadarChartAutomation-windows.zip --clobber
+          gh release upload "$tag" artifacts/**/RadarChartAutomation-macos.zip --clobber

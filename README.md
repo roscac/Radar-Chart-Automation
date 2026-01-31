@@ -16,6 +16,10 @@ Visit the GitHub Releases page and download the latest macOS or Windows zip file
 Outputs are stored in:
 `~/Documents/RadarChartAutomation/Runs/<run_folder_name>/`
 
+## Inputs and outputs (summary)
+- Inputs: Teamworks AMS CSV exports (one test date per CSV).
+- Outputs: per-run folder with `01_raw_input/`, `02_percentiles/`, `03_outputs/`, and `logs/`.
+
 ## Project structure
 ```
 radar_chart_automation/
@@ -65,23 +69,11 @@ pyinstaller --noconfirm radar_chart_automation.spec
 ```
 Output: `dist/RadarChartAutomation/RadarChartAutomation.exe`
 
-## Release (tag + build via GitHub Actions)
+## Maintainers: publish a release
 ```
 python scripts/release.py --patch
 ```
-Creates a version tag (e.g. `v0.2.0`), pushes it, and triggers the release workflow.
-
-### PyInstaller (Windows)
-```
-pyinstaller radar_chart_automation.spec
-```
-Output: `dist/RadarChartAutomation/RadarChartAutomation.exe`
-
-### PyInstaller (macOS)
-```
-pyinstaller radar_chart_automation.spec
-```
-Output: `dist/RadarChartAutomation/RadarChartAutomation.app`
+Creates a version tag (e.g. `v0.2.0`), pushes it, and triggers GitHub Actions to build and attach macOS/Windows zips to the Release.
 
 Optional icon:
 - Add an `.ico` (Windows) or `.icns` (macOS) and update `radar_chart_automation.spec` with `icon=...` in `EXE()`.
