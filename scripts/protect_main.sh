@@ -46,15 +46,29 @@ fi
 default_branch=$(gh api "/repos/${owner}/${repo}" --jq .default_branch 2>/dev/null || true)
 branch="${default_branch:-main}"
 
-# TODO: Replace the placeholder with your actual CI check contexts.
-# Example: ["CI / ci (ubuntu-latest)", "CI / ci (macos-latest)", "CI / ci (windows-latest)"]
-payload=$(cat <<'JSON'
+# Resolve CI status check contexts from the latest CI workflow run.
+# Fallback to the placeholder if we cannot detect them.
+contexts_json='["REPLACE_ME_WITH_ACTUAL_STATUS_CHECK_NAME"]'
+
+workflow_id=$(gh api "/repos/${owner}/${repo}/actions/workflows/ci.yml" --jq .id 2>/dev/null || true)
+if [[ -n "${workflow_id}" ]]; then
+  run_id=$(gh api "/repos/${owner}/${repo}/actions/workflows/${workflow_id}/runs?branch=${branch}&per_page=1" --jq '.workflow_runs[0].id' 2>/dev/null || true)
+  if [[ -n "${run_id}" ]]; then
+    workflow_name=$(gh api "/repos/${owner}/${repo}/actions/runs/${run_id}" --jq .name 2>/dev/null || true)
+    if [[ -n "${workflow_name}" ]]; then
+      job_names=$(gh api "/repos/${owner}/${repo}/actions/runs/${run_id}/jobs?per_page=100" --jq '.jobs[].name' 2>/dev/null || true)
+      if [[ -n "${job_names}" ]]; then
+        contexts_json=$(printf '%s\n' "${job_names}" | awk -v wf="${workflow_name}" 'NF{print "\"" wf " / " $0 "\""}' | paste -sd, - | sed 's/^/[/' | sed 's/$/]/')
+      fi
+    fi
+  fi
+fi
+
+payload=$(cat <<JSON
 {
   "required_status_checks": {
     "strict": true,
-    "contexts": [
-      "REPLACE_ME_WITH_ACTUAL_STATUS_CHECK_NAME"
-    ]
+    "contexts": ${contexts_json}
   },
   "enforce_admins": true,
   "required_pull_request_reviews": {
