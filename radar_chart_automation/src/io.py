@@ -57,6 +57,7 @@ def _match_column(columns, candidates):
 
 
 def detect_column_mapping(columns) -> ColumnMappingResult:
+    # Auto-detect common header variants; caller can prompt user if missing.
     mapping: Dict[str, str] = {}
     missing = []
     name_column = _match_column(columns, NAME_COLUMN_CANDIDATES)

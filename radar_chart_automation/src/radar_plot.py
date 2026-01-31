@@ -1,3 +1,5 @@
+"""Radar chart rendering with polygon grid rings (not circular)."""
+
 from typing import Dict, List, Tuple
 
 import matplotlib.pyplot as plt

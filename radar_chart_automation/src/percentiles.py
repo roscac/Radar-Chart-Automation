@@ -14,6 +14,7 @@ METRIC_TO_AXIS = {
 
 
 def compute_percentiles(df: pd.DataFrame, mapping: Dict[str, str]):
+    # Excel-like percent rank: rank(value, ascending=True, average ties) / N.
     n = len(df)
     if n == 0:
         raise ValueError("No athlete rows found in CSV.")
