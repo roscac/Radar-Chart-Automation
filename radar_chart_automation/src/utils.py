@@ -7,7 +7,7 @@ from dateutil import parser
 
 DATE_COLUMN_CANDIDATES = [
     "date",
-    "test date",
+    "metrics pull date",
     "session date",
 ]
 

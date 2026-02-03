@@ -37,7 +37,7 @@ class RadarChartApp(tk.Tk):
         button_frame = ttk.Frame(frame)
         button_frame.pack(fill=tk.X, pady=(12, 4))
 
-        self.select_button = ttk.Button(button_frame, text="Select CSV(s)", command=self.select_files)
+        self.select_button = ttk.Button(button_frame, text="Select File(s)", command=self.select_files)
         self.select_button.pack(side=tk.LEFT)
 
         self.run_button = ttk.Button(button_frame, text="Run", command=self.run_processing)
@@ -77,8 +77,12 @@ class RadarChartApp(tk.Tk):
 
     def select_files(self):
         files = filedialog.askopenfilenames(
-            title="Select Teamworks CSV exports",
-            filetypes=[("CSV Files", "*.csv")],
+            title="Select Teamworks exports",
+            filetypes=[
+                ("CSV or Excel", "*.csv *.xlsx *.xlsm *.xls"),
+                ("CSV Files", "*.csv"),
+                ("Excel Files", "*.xlsx *.xlsm *.xls"),
+            ],
         )
         if files:
             self.selected_files = list(files)

@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
+import os
+
 import pandas as pd
 
 NAME_COLUMN_CANDIDATES = [
@@ -77,7 +79,13 @@ def detect_column_mapping(columns) -> ColumnMappingResult:
 
 
 def load_csv(path: str, mapping: Optional[Dict[str, str]] = None) -> pd.DataFrame:
-    df = pd.read_csv(path)
+    ext = os.path.splitext(path)[1].lower()
+    if ext in [".xlsx", ".xlsm"]:
+        df = pd.read_excel(path, engine="openpyxl")
+    elif ext == ".xls":
+        raise ValueError("Legacy .xls files are not supported. Please save as .xlsx.")
+    else:
+        df = pd.read_csv(path)
     if mapping:
         missing = [key for key in REQUIRED_KEYS if key not in mapping]
         if missing:

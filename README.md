@@ -20,7 +20,7 @@ On first launch, macOS may block the app because it’s not notarized. Use Contr
 6. Click **Open output folder** and print the PDF.
 
 ## Inputs
-- One CSV per test date (Teamworks AMS export).
+- One CSV or Excel file per Metrics Pull Date (Teamworks AMS export).
 - Athlete name column is auto-detected; if missing, you will be prompted to map columns.
 - Required metrics (numeric columns):
   - Jump Height (in) → Jump Height
@@ -42,6 +42,7 @@ On first launch, macOS may block the app because it’s not notarized. Use Contr
 - **Missing columns**: you’ll be prompted to map them.
 - **Non-numeric values**: the run will stop and report the offending column.
 - **Tkinter errors on macOS**: use a Tk-enabled Python build (pyenv with framework or python.org installer).
+- **Legacy .xls files**: save as .xlsx before importing.
 
 ## Privacy
 All processing is local. No uploads. Do not commit CSVs or output folders to git.

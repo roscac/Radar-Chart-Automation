@@ -14,7 +14,7 @@ METRIC_TO_AXIS = {
 
 
 def compute_percentiles(df: pd.DataFrame, mapping: Dict[str, str]):
-    # Excel-like percent rank: rank(value, ascending=True, average ties) / N.
+    # Excel-like percent rank: RANK.EQ(value, range, 1) / COUNT(range).
     n = len(df)
     if n == 0:
         raise ValueError("No athlete rows found in CSV.")
@@ -26,8 +26,14 @@ def compute_percentiles(df: pd.DataFrame, mapping: Dict[str, str]):
     percentiles_by_metric: Dict[str, pd.Series] = {}
     for metric_key, axis_label in METRIC_TO_AXIS.items():
         col = mapping[metric_key]
-        ranks = df[col].rank(method="average", ascending=True)
-        percent = ranks / n
+        series = pd.to_numeric(df[col], errors="coerce")
+        if series.isna().any():
+            raise ValueError(f"Non-numeric or missing values in column: {col}")
+        count = int(series.count())
+        if count == 0:
+            raise ValueError(f"No numeric values found in column: {col}")
+        ranks = series.rank(method="min", ascending=True)
+        percent = ranks / count
         percentiles_by_metric[axis_label] = percent
 
     for idx, row in df.iterrows():
@@ -56,3 +62,18 @@ def _axis_to_metric(axis_label: str) -> str:
         if label == axis_label:
             return key
     raise KeyError(axis_label)
+
+
+def validate_percentile_behavior(series: pd.Series) -> dict:
+    series = pd.to_numeric(series, errors="coerce")
+    if series.isna().any():
+        raise ValueError("Series contains non-numeric or missing values.")
+    count = int(series.count())
+    ranks = series.rank(method="min", ascending=True)
+    percentiles = ranks / count
+    return {
+        "min_percentile": float(percentiles.min()),
+        "max_percentile": float(percentiles.max()),
+        "has_ties": series.duplicated().any(),
+        "percentiles": percentiles,
+    }

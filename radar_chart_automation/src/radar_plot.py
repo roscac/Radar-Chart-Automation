@@ -17,7 +17,7 @@ def build_radar_figure(athlete_name: str, date_to_values: Dict[str, List[float]]
     n_axes = len(AXIS_LABELS)
     angles = _axis_angles(n_axes)
 
-    ring_levels = [20, 40, 60, 80, 100]
+    ring_levels = [0, 25, 50, 75, 100]
     _draw_polygon_grid(ax, angles, ring_levels)
     _draw_axis_labels(ax, angles)
 
