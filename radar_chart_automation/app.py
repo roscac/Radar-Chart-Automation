@@ -24,6 +24,7 @@ class RadarChartApp(tk.Tk):
 
         self.selected_files = []
         self.last_run_folder = None
+        self.athlete_names = []
 
         self._build_ui()
 
@@ -43,6 +44,9 @@ class RadarChartApp(tk.Tk):
         self.run_button = ttk.Button(button_frame, text="Run", command=self.run_processing)
         self.run_button.pack(side=tk.LEFT, padx=(8, 0))
 
+        self.make_charts_button = ttk.Button(button_frame, text="Make Charts", command=self.make_charts)
+        self.make_charts_button.pack(side=tk.LEFT, padx=(8, 0))
+
         self.open_button = ttk.Button(button_frame, text="Open output folder", command=self.open_output_folder)
         self.open_button.pack(side=tk.LEFT, padx=(8, 0))
         self.open_button.state(["disabled"])
@@ -60,6 +64,26 @@ class RadarChartApp(tk.Tk):
             frame, text="Export PNGs", variable=self.export_png_var
         )
         self.export_png_check.pack(anchor=tk.W, pady=(4, 8))
+
+        self.selected_only_var = tk.BooleanVar(value=False)
+        self.selected_only_check = ttk.Checkbutton(
+            frame,
+            text="Only for selected athletes",
+            variable=self.selected_only_var,
+            command=self._toggle_athlete_list,
+        )
+        self.selected_only_check.pack(anchor=tk.W)
+
+        athlete_frame = ttk.Frame(frame)
+        athlete_frame.pack(fill=tk.BOTH, pady=(4, 8))
+        self.athlete_listbox = tk.Listbox(
+            athlete_frame, height=6, selectmode=tk.MULTIPLE, exportselection=False
+        )
+        scrollbar = ttk.Scrollbar(athlete_frame, orient=tk.VERTICAL, command=self.athlete_listbox.yview)
+        self.athlete_listbox.configure(yscrollcommand=scrollbar.set)
+        self.athlete_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self._set_athlete_list_state(enabled=False)
 
         self.status_area = ScrolledText(frame, height=18, wrap=tk.WORD, state=tk.DISABLED)
         self.status_area.pack(fill=tk.BOTH, expand=True)
@@ -87,6 +111,21 @@ class RadarChartApp(tk.Tk):
         if files:
             self.selected_files = list(files)
             self.log_status(f"Selected {len(files)} file(s).")
+
+    def _set_athlete_list_state(self, *, enabled: bool):
+        state = tk.NORMAL if enabled else tk.DISABLED
+        self.athlete_listbox.configure(state=state)
+
+    def _toggle_athlete_list(self):
+        self._set_athlete_list_state(enabled=self.selected_only_var.get())
+
+    def _update_athlete_list(self, athletes):
+        self.athlete_listbox.configure(state=tk.NORMAL)
+        self.athlete_listbox.delete(0, tk.END)
+        for name in athletes:
+            self.athlete_listbox.insert(tk.END, name)
+        if not self.selected_only_var.get():
+            self._set_athlete_list_state(enabled=False)
 
     def open_output_folder(self):
         if not self.last_run_folder:
@@ -116,7 +155,7 @@ class RadarChartApp(tk.Tk):
 
     def run_processing(self):
         if not self.selected_files:
-            messagebox.showerror("Missing files", "Please select one or more CSV files.")
+            messagebox.showerror("Missing files", "Please select one or more files.")
             return
 
         run_title_input = self.run_title_entry.get().strip()
@@ -139,7 +178,6 @@ class RadarChartApp(tk.Tk):
         long_frames = []
         wide_frames = []
         date_labels = []
-        athlete_date_values = {}
 
         try:
             for path in self.selected_files:
@@ -155,23 +193,11 @@ class RadarChartApp(tk.Tk):
                 logger.info("Date label for %s: %s", path, date_label)
 
                 long_df, wide_df = percentiles.compute_percentiles(df, mapping)
-                long_df["test_date_label"] = date_label
-                wide_df["test_date_label"] = date_label
+                long_df["metrics_pull_date_label"] = date_label
+                wide_df["metrics_pull_date_label"] = date_label
 
                 long_frames.append(long_df)
                 wide_frames.append(wide_df)
-
-                for _, row in wide_df.iterrows():
-                    athlete = row["athlete_name"]
-                    values = [
-                        row["Jump Height percentile"],
-                        row["Triple Ext percentile"],
-                        row["Elasticity percentile"],
-                        row["Loading percentile"],
-                        row["Braking percentile"],
-                    ]
-                    values = [float(v) * 100 for v in values]
-                    athlete_date_values.setdefault(athlete, {})[date_label] = values
 
                 logger.info("Processed %s athletes for %s", len(wide_df), date_label)
 
@@ -181,31 +207,89 @@ class RadarChartApp(tk.Tk):
             long_all.to_csv(os.path.join(run_paths.percentiles, "percentiles_long.csv"), index=False)
             wide_all.to_csv(os.path.join(run_paths.percentiles, "percentiles_wide.csv"), index=False)
 
-            self.log_status("Building PDF charts...")
-            pdf_name = f"{os.path.basename(run_paths.base)}__radars.pdf"
-            pdf_path = os.path.join(run_paths.outputs, pdf_name)
-
-            with PdfPages(pdf_path) as pdf:
-                for athlete, date_map in athlete_date_values.items():
-                    ordered_map = {label: date_map[label] for label in date_labels if label in date_map}
-                    fig = radar_plot.build_radar_figure(athlete, ordered_map)
-                    pdf.savefig(fig)
-                    if self.export_png_var.get():
-                        png_dir = os.path.join(run_paths.outputs, "png")
-                        os.makedirs(png_dir, exist_ok=True)
-                        filename = utils.sanitize_filename(athlete) + ".png"
-                        fig.savefig(os.path.join(png_dir, filename), dpi=150)
-                    plt_close(fig)
-
             self.last_run_folder = run_paths.base
+            self.athlete_names = sorted(wide_all["athlete_name"].unique().tolist())
+            self._update_athlete_list(self.athlete_names)
             self.open_button.state(["!disabled"])
-            self.log_status("Run complete.")
+            self.log_status("Percentiles saved. Use 'Make Charts' to build PDFs.")
             self.log_status(f"Output folder: {run_paths.base}")
         except Exception as exc:
             logger.error("Run failed: %s", exc)
             logger.error(traceback.format_exc())
             messagebox.showerror("Error", str(exc))
             self.log_status(f"Error: {exc}")
+
+    def make_charts(self):
+        if not self.last_run_folder:
+            messagebox.showerror("Run required", "Please click Run first to create percentiles.")
+            return
+
+        percentiles_path = os.path.join(
+            self.last_run_folder, "02_percentiles", "percentiles_wide.csv"
+        )
+        if not os.path.exists(percentiles_path):
+            messagebox.showerror("Missing percentiles", "Percentiles file not found. Please click Run first.")
+            return
+
+        wide_all = pd.read_csv(percentiles_path)
+        label_col = "metrics_pull_date_label"
+        if label_col not in wide_all.columns:
+            label_col = "test_date_label"
+        if label_col not in wide_all.columns:
+            raise ValueError("Missing Metrics Pull Date column in percentiles.")
+
+        date_labels = list(dict.fromkeys(wide_all[label_col].tolist()))
+
+        athlete_date_values = {}
+        for _, row in wide_all.iterrows():
+            athlete = row["athlete_name"]
+            date_label = row[label_col]
+            values = [
+                row["Jump Height percentile"],
+                row["Triple Ext percentile"],
+                row["Elasticity percentile"],
+                row["Loading percentile"],
+                row["Braking percentile"],
+            ]
+            values = [float(v) * 100 for v in values]
+            athlete_date_values.setdefault(athlete, {})[date_label] = values
+
+        selected_athletes = None
+        if self.selected_only_var.get():
+            selected_indices = self.athlete_listbox.curselection()
+            if not selected_indices:
+                messagebox.showerror(
+                    "No athletes selected",
+                    "Select one or more athletes or uncheck 'Only for selected athletes'.",
+                )
+                return
+            selected_athletes = {self.athlete_listbox.get(i) for i in selected_indices}
+
+        run_title_input = self.run_title_entry.get().strip()
+        user_provided_title = run_title_input and not run_title_input.startswith("e.g.")
+        if user_provided_title:
+            pdf_base = utils.sanitize_title(run_title_input)
+            pdf_name = f"{pdf_base}__radars.pdf"
+        else:
+            pdf_name = f"{os.path.basename(self.last_run_folder)}__radars.pdf"
+        pdf_path = os.path.join(self.last_run_folder, "03_outputs", pdf_name)
+
+        self.log_status("Building PDF charts...")
+        with PdfPages(pdf_path) as pdf:
+            for athlete, date_map in athlete_date_values.items():
+                if selected_athletes is not None and athlete not in selected_athletes:
+                    continue
+                ordered_map = {label: date_map[label] for label in date_labels if label in date_map}
+                fig = radar_plot.build_radar_figure(athlete, ordered_map)
+                pdf.savefig(fig)
+                if self.export_png_var.get():
+                    png_dir = os.path.join(self.last_run_folder, "03_outputs", "png")
+                    os.makedirs(png_dir, exist_ok=True)
+                    filename = utils.sanitize_filename(athlete) + ".png"
+                    fig.savefig(os.path.join(png_dir, filename), dpi=150)
+                plt_close(fig)
+
+        self.log_status("Charts complete.")
 
     def _load_with_mapping(self, path: str):
         try:

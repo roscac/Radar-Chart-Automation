@@ -13,11 +13,13 @@ On first launch, macOS may block the app because it’s not notarized. Use Contr
 
 ## Quick start (end users)
 1. Open the app (.app on macOS or .exe on Windows).
-2. Click **Select CSV(s)** and choose one or more Teamworks exports (one date per CSV).
-3. (Optional) Enter a **Run title**.
+2. Click **Select File(s)** and choose one or more Teamworks exports (one date per file).
+3. (Optional) Enter a **Run title** (can be filled in before clicking **Make Charts**).
 4. (Optional) check **Export PNGs**.
-5. Click **Run**.
-6. Click **Open output folder** and print the PDF.
+5. Click **Run** (this creates the percentile files only).
+6. (Optional) check **Only for selected athletes** and select names from the list.
+7. Click **Make Charts** to generate the PDF/PNGs.
+8. Click **Open output folder** and print the PDF.
 
 ## Inputs
 - One CSV or Excel file per Metrics Pull Date (Teamworks AMS export).
@@ -34,7 +36,7 @@ On first launch, macOS may block the app because it’s not notarized. Use Contr
 - Each run creates:
   - `01_raw_input/` (copied CSVs)
   - `02_percentiles/` (long + wide percentile CSVs)
-  - `03_outputs/` (multi-page PDF + optional PNGs)
+  - `03_outputs/` (multi-page PDF + optional PNGs, created by **Make Charts**)
   - `logs/` (run log)
 - Multi-page PDF is Letter (8.5x11) and print-ready.
 
