@@ -2,10 +2,19 @@ import os
 import shutil
 import sys
 import traceback
-import tkinter as tk
 from datetime import datetime
-from tkinter import filedialog, messagebox, simpledialog, ttk
-from tkinter.scrolledtext import ScrolledText
+
+try:
+    import tkinter as tk
+    from tkinter import filedialog, messagebox, simpledialog, ttk
+    from tkinter.scrolledtext import ScrolledText
+except ImportError as exc:
+    print("Could not import tkinter.")
+    print("Launch using the project bootstrap so the app uses .venv:")
+    print("  python run_app.py")
+    print()
+    print(f"Original error: {exc}")
+    raise SystemExit(1) from exc
 
 import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
@@ -74,6 +83,28 @@ class RadarChartApp(tk.Tk):
         )
         self.selected_only_check.pack(anchor=tk.W)
 
+        selected_files_frame = ttk.LabelFrame(frame, text="Selected input files")
+        selected_files_frame.pack(fill=tk.BOTH, pady=(8, 8))
+
+        file_list_frame = ttk.Frame(selected_files_frame)
+        file_list_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=(6, 4))
+        self.files_listbox = tk.Listbox(
+            file_list_frame, height=5, selectmode=tk.EXTENDED, exportselection=False
+        )
+        files_scrollbar = ttk.Scrollbar(file_list_frame, orient=tk.VERTICAL, command=self.files_listbox.yview)
+        self.files_listbox.configure(yscrollcommand=files_scrollbar.set)
+        self.files_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        files_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        file_actions_frame = ttk.Frame(selected_files_frame)
+        file_actions_frame.pack(fill=tk.X, padx=8, pady=(0, 8))
+        self.remove_files_button = ttk.Button(
+            file_actions_frame, text="Remove selected", command=self.remove_selected_files
+        )
+        self.remove_files_button.pack(side=tk.LEFT)
+        self.clear_files_button = ttk.Button(file_actions_frame, text="Clear all", command=self.clear_selected_files)
+        self.clear_files_button.pack(side=tk.LEFT, padx=(8, 0))
+
         athlete_frame = ttk.Frame(frame)
         athlete_frame.pack(fill=tk.BOTH, pady=(4, 8))
         self.athlete_listbox = tk.Listbox(
@@ -85,7 +116,7 @@ class RadarChartApp(tk.Tk):
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self._set_athlete_list_state(enabled=False)
 
-        self.status_area = ScrolledText(frame, height=18, wrap=tk.WORD, state=tk.DISABLED)
+        self.status_area = ScrolledText(frame, height=12, wrap=tk.WORD, state=tk.DISABLED)
         self.status_area.pack(fill=tk.BOTH, expand=True)
 
     def _clear_placeholder(self, event):
@@ -109,8 +140,48 @@ class RadarChartApp(tk.Tk):
             ],
         )
         if files:
-            self.selected_files = list(files)
-            self.log_status(f"Selected {len(files)} file(s).")
+            added = self._append_selected_files(files)
+            self.log_status(
+                f"Added {added} file(s). {len(self.selected_files)} total selected."
+            )
+            self._refresh_selected_files_listbox()
+
+    def _file_key(self, path: str) -> str:
+        return os.path.normcase(os.path.abspath(path))
+
+    def _append_selected_files(self, files) -> int:
+        existing = {self._file_key(path) for path in self.selected_files}
+        added = 0
+        for path in files:
+            key = self._file_key(path)
+            if key in existing:
+                continue
+            self.selected_files.append(path)
+            existing.add(key)
+            added += 1
+        return added
+
+    def _refresh_selected_files_listbox(self):
+        self.files_listbox.delete(0, tk.END)
+        for path in self.selected_files:
+            self.files_listbox.insert(tk.END, path)
+
+    def remove_selected_files(self):
+        indices = sorted(self.files_listbox.curselection(), reverse=True)
+        if not indices:
+            return
+        for index in indices:
+            del self.selected_files[index]
+        self._refresh_selected_files_listbox()
+        self.log_status(f"Removed {len(indices)} file(s). {len(self.selected_files)} remaining.")
+
+    def clear_selected_files(self):
+        count = len(self.selected_files)
+        if count == 0:
+            return
+        self.selected_files.clear()
+        self._refresh_selected_files_listbox()
+        self.log_status("Cleared selected files.")
 
     def _set_athlete_list_state(self, *, enabled: bool):
         state = tk.NORMAL if enabled else tk.DISABLED

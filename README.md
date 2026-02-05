@@ -44,6 +44,7 @@ On first launch, macOS may block the app because it’s not notarized. Use Contr
 - **Missing columns**: you’ll be prompted to map them.
 - **Non-numeric values**: the run will stop and report the offending column.
 - **Tkinter errors on macOS**: use a Tk-enabled Python build (pyenv with framework or python.org installer).
+- **Conda/pyenv interpreter mixups**: run the app with `python run_app.py` from `radar_chart_automation/` so it always relaunches with `.venv`.
 - **Legacy .xls files**: save as .xlsx before importing.
 
 ## Privacy
@@ -57,7 +58,7 @@ python -m venv .venv
 source .venv/bin/activate  # macOS/Linux
 .venv\Scripts\activate     # Windows
 pip install -r requirements.txt
-python app.py
+python run_app.py
 ```
 
 ### Build (macOS)
