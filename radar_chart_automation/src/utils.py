@@ -11,6 +11,12 @@ DATE_COLUMN_CANDIDATES = [
     "session date",
 ]
 
+FILENAME_DATE_PATTERNS = [
+    re.compile(r"(?<!\d)\d{4}[-_. ]\d{1,2}[-_. ]\d{1,2}(?!\d)"),
+    re.compile(r"(?<!\d)\d{1,2}[-_. ]\d{1,2}[-_. ]\d{4}(?!\d)"),
+    re.compile(r"(?<!\d)\d{1,2}[-_. ]\d{1,2}[-_. ]\d{2}(?!\d)"),
+]
+
 
 def sanitize_filename(value: str) -> str:
     value = value.strip()
@@ -35,6 +41,11 @@ def parse_date_label(value: str) -> Optional[str]:
 
 def infer_date_from_filename(filename: str) -> Optional[str]:
     stem = os.path.splitext(os.path.basename(filename))[0]
+    for pattern in FILENAME_DATE_PATTERNS:
+        for match in pattern.finditer(stem):
+            parsed = parse_date_label(match.group(0))
+            if parsed:
+                return parsed
     return parse_date_label(stem)
 
 
